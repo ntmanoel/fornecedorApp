@@ -1,70 +1,146 @@
-import { Image, StyleSheet, Platform } from 'react-native';
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  Button,
+  FlatList,
+  Image,
+  StyleSheet,
+  TouchableOpacity
+} from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+const App = () => {
+  const [nome, setNome] = useState('');
+  const [endereco, setEndereco] = useState('');
+  const [contato, setContato] = useState('');
+  const [categoria, setCategoria] = useState('');
+  const [fornecedores, setFornecedores] = useState([]);
+  const [imagem, setImagem] = useState(null);
 
-export default function HomeScreen() {
+  // seletor de imagens
+  const pickImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      setImagem(result.assets[0].uri);
+    }
+  };
+
+  // cadastrar fornecedor
+  const adicionarFornecedor = () => {
+    if (nome && endereco && contato && categoria) {
+      setFornecedores([
+        ...fornecedores,
+        { nome, endereco, contato, categoria, imagem },
+      ]);
+      setNome('');
+      setEndereco('');
+      setContato('');
+      setCategoria('');
+      setImagem(null);
+    }
+  };
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({ ios: 'cmd + d', android: 'cmd + m' })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          Tap the Explore tab to learn more about what's included in this starter app.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          When you're ready, run{' '}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+    <View style={styles.container}>
+      <Text style={styles.title}>Cadastro de Fornecedores</Text>
+
+      <TextInput
+        style={styles.input}
+        placeholder="Nome do fornecedor"
+        value={nome}
+        onChangeText={setNome}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Endereço"
+        value={endereco}
+        onChangeText={setEndereco}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Contato"
+        value={contato}
+        onChangeText={setContato}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Categoria"
+        value={categoria}
+        onChangeText={setCategoria}
+      />
+
+      <Button title="Escolher imagem" onPress={pickImage} />
+      {imagem && (
+        <Image source={{ uri: imagem }} style={styles.imagePreview} />
+      )}
+
+      <Button title="Cadastrar Fornecedor" onPress={adicionarFornecedor} />
+
+      <Text style={styles.title}>Lista de Fornecedores</Text>
+      <FlatList
+        data={fornecedores}
+        keyExtractor={(item, index) => index.toString()}
+        renderItem={({ item }) => (
+          <View style={styles.fornecedorItem}>
+            <Text style={styles.itemText}>Nome: {item.nome}</Text>
+            <Text style={styles.itemText}>Endereço: {item.endereco}</Text>
+            <Text style={styles.itemText}>Contato: {item.contato}</Text>
+            <Text style={styles.itemText}>Categoria: {item.categoria}</Text>
+            {item.imagem && (
+              <Image source={{ uri: item.imagem }} style={styles.itemImage} />
+            )}
+          </View>
+        )}
+      />
+    </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  container: {
+    flex: 1,
+    padding: 20,
+    backgroundColor: '#fff',
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  title: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginVertical: 10,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  input: {
+    borderWidth: 1,
+    borderColor: 'gray',
+    padding: 10,
+    marginVertical: 5,
+    borderRadius: 5,
+  },
+  imagePreview: {
+    width: 100,
+    height: 100,
+    marginVertical: 10,
+  },
+  fornecedorItem: {
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
+    marginVertical: 5,
+  },
+  itemText: {
+    fontSize: 16,
+  },
+  itemImage: {
+    width: 50,
+    height: 50,
+    marginTop: 5,
   },
 });
+
+export default App;
